@@ -194,14 +194,24 @@ var UIController = (function(){
         numSplit = num.split('.');
 
         int = numSplit[0];
-        if(int.length > 3){
+        if(int.length > 3 && int.length <= 6){
             int = int.substr(0,int.length - 3) + ',' + int.substr(int.length - 3, 3);
+        }
+        else if(int.length > 6){
+            int = int.substr(0,int.length - 6) + ',' + int.substr(int.length - 6, 3) + ',' + int.substr(int.length - 3, 3);
+            //2,000,000
         }
 
         dec = numSplit[1];
         // + - before number  +1000
         return (type === 'exp' ? '-' :  '+') + int + '.' + dec;
 
+    };
+
+    var nodeListForEach = function (list, callback) {
+        for (var i = 0; i < list.length; i++) {
+            callback(list[i], i);
+        }
     };
 
     return {
@@ -281,12 +291,6 @@ var UIController = (function(){
 
             var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
 
-            var nodeListForEach = function (list, callback) {
-                for (var i = 0; i < list.length; i++) {
-                    callback(list[i], i);
-                }
-            };
-
             nodeListForEach(fields, function (cur, index) {
                 //display percentages
                 if (percentages[index] > 0)
@@ -306,10 +310,22 @@ var UIController = (function(){
             months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             month = now.getMonth();
 
-
             document.querySelector(DOMStrings.dateLabel).textContent = months[month]+ ' ' + year;
+        },
 
+        changeType: function(){
 
+            var fields = document.querySelectorAll(
+                DOMStrings.inputType + ',' +
+                DOMStrings.inputDescription + ',' +
+                DOMStrings.inputValue
+            );
+
+            nodeListForEach(fields, function(cur){
+               cur.classList.toggle('red-focus');
+            });
+
+            document.querySelector(DOMStrings.inputBtn).classList.toggle('red');
         },
 
         getDOMStrings: function(){
@@ -333,6 +349,7 @@ var controller = (function(budgetCtrl, UICtrl){
 
         document.querySelector(DOM.container).addEventListener('click',controlDeleteItem);
 
+        document.querySelector(DOM.inputType).addEventListener('change',UICtrl.changeType);
     };
 
     var updateBudget = function(){
