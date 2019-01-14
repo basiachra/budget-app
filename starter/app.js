@@ -61,21 +61,21 @@ var budgetController = (function(){
         data.totals[type] = sum;
     };
 
-    return{
-        addItem: function(type, des, val){
-            var newItem;
+    return {
+        addItem: function (type, des, val) {
+            var newItem, ID;
 
             //create new ID
 
-            if(data.allItems[type].length > 0){
-                ID = data.allItems[type][data.allItems[type].length -1].id + 1;
-            }else ID = 0;
+            if (data.allItems[type].length > 0) {
+                ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
+            } else ID = 0;
 
 
             //Create new exp/inc object
-            if(type === 'exp') {
+            if (type === 'exp') {
                 newItem = new Expence(ID, des, val);
-            }else if(type === 'inc'){
+            } else if (type === 'inc') {
                 newItem = new Income(ID, des, val);
             }
 
@@ -83,6 +83,24 @@ var budgetController = (function(){
             data.allItems[type].push(newItem);
             return newItem;
         },
+
+        deleteItem: function(type,id){
+
+            var ids,index;
+
+            ids = data.allItems[type].map(function(current){
+               return current.id;
+            });
+
+            index = ids.indexOf(id);
+
+            if(index !== -1){
+                //delete
+                data.allItems[type].splice(index,1);
+            }
+
+        },
+
         calculateBudget: function(){
 
             //calculate total income and expences
@@ -130,7 +148,8 @@ var UIController = (function(){
         budgetLabel: ".budget__value",
         incomeLabel: ".budget__income--value",
         expensesLabel: ".budget__expenses--value",
-        percentageLabel: ".budget__expenses--percentage"
+        percentageLabel: ".budget__expenses--percentage",
+        container: '.container'
     };
 
     return {
@@ -166,6 +185,14 @@ var UIController = (function(){
             //insert into the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
+
+        deleteListItem: function(selectorID){
+
+            var element = document.getElementById(selectorID);
+            element.parentNode.removeChild(element);
+
+        },
+
         clearFields: function(){
 
             var fields,fieldsArray;
@@ -183,6 +210,7 @@ var UIController = (function(){
             fieldsArray[0].focus();
 
         },
+
         displayBudget: function(obj){
 
             document.querySelector(DOMStrings.budgetLabel).textContent = obj.budget;
@@ -211,11 +239,12 @@ var controller = (function(budgetCtrl, UICtrl){
         var DOM = UICtrl.getDOMStrings();
         document.querySelector(DOM.inputBtn).addEventListener('click',ctrlAddItem);
         document.addEventListener('keypress', function(event){
-
             if(event.keyCode === 13 || event.which === 13)
                 ctrlAddItem();
-
         });
+
+        document.querySelector(DOM.container).addEventListener('click',controlDeleteItem);
+
     };
 
     var updateBudget = function(){
@@ -252,6 +281,30 @@ var controller = (function(budgetCtrl, UICtrl){
             updateBudget();
         }
     };
+
+    var controlDeleteItem = function(event){
+        var itemID,splitID,type,ID;
+
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+        if(itemID){
+
+            //inc-1
+            splitID = itemID.split('-');
+            type = splitID[0];
+            ID = parseInt(splitID[1]);
+
+
+            //1.delete the item form data structure
+            budgetCtrl.deleteItem(type,ID);
+            //2.delete the item from the UI
+            UICtrl.deleteListItem(itemID);
+
+            //3.update and show the new budget
+            updateBudget();
+        }
+
+    }
 
     return{
         init: function(){
